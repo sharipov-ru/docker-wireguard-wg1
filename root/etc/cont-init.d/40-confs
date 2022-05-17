@@ -3,7 +3,7 @@
 # prepare symlinks
 rm -rf /etc/wireguard
 mkdir -p /etc/wireguard
-ln -s /config/wg0.conf /etc/wireguard/wg0.conf
+ln -s /config/wg1.conf /etc/wireguard/wg1.conf
 # prepare templates
 [[ ! -f /config/templates/server.conf ]] && \
   cp /defaults/server.conf /config/templates/server.conf
@@ -21,7 +21,7 @@ generate_confs () {
     wg genkey | tee /config/server/privatekey-server | wg pubkey > /config/server/publickey-server
   fi
   eval "`printf %s`
-  cat <<DUDE > /config/wg0.conf
+  cat <<DUDE > /config/wg1.conf
 `cat /config/templates/server.conf`
 
 DUDE"
@@ -58,7 +58,7 @@ DUDE"
 `cat /config/templates/peer.conf`
 DUDE"
       # add peer info to server conf with presharedkey
-      cat <<DUDE >> /config/wg0.conf
+      cat <<DUDE >> /config/wg1.conf
 [Peer]
 # ${PEER_ID}
 PublicKey = $(cat /config/${PEER_ID}/publickey-${PEER_ID})
@@ -72,7 +72,7 @@ DUDE
 `cat /config/templates/peer.conf | sed '/PresharedKey/d'`
 DUDE"
       # add peer info to server conf without presharedkey
-      cat <<DUDE >> /config/wg0.conf
+      cat <<DUDE >> /config/wg1.conf
 [Peer]
 # ${PEER_ID}
 PublicKey = $(cat /config/${PEER_ID}/publickey-${PEER_ID})
@@ -81,13 +81,13 @@ DUDE
     SERVER_ALLOWEDIPS=SERVER_ALLOWEDIPS_PEER_${i}
     # add peer's allowedips to server conf
     if [ -n "${!SERVER_ALLOWEDIPS}" ]; then
-      echo "Adding ${!SERVER_ALLOWEDIPS} to wg0.conf's AllowedIPs for peer ${i}"
-      cat <<DUDE >> /config/wg0.conf
+      echo "Adding ${!SERVER_ALLOWEDIPS} to wg1.conf's AllowedIPs for peer ${i}"
+      cat <<DUDE >> /config/wg1.conf
 AllowedIPs = ${CLIENT_IP}/32,${!SERVER_ALLOWEDIPS}
 
 DUDE
     else
-      cat <<DUDE >> /config/wg0.conf
+      cat <<DUDE >> /config/wg1.conf
 AllowedIPs = ${CLIENT_IP}/32
 
 DUDE
@@ -140,8 +140,8 @@ if [ -n "$PEERS" ]; then
   else
     echo "**** Peer DNS servers will be set to $PEERDNS ****"
   fi
-  if [ ! -f /config/wg0.conf ]; then
-    echo "**** No wg0.conf found (maybe an initial install), generating 1 server and ${PEERS} peer/client confs ****"
+  if [ ! -f /config/wg1.conf ]; then
+    echo "**** No wg1.conf found (maybe an initial install), generating 1 server and ${PEERS} peer/client confs ****"
     generate_confs
     save_vars
   else
@@ -158,8 +158,8 @@ if [ -n "$PEERS" ]; then
   fi
 else
   echo "**** Client mode selected. ****"
-  if [ ! -f /config/wg0.conf ]; then
-    echo "**** No client conf found. Provide your own client conf as \"/config/wg0.conf\" and restart the container. ****"
+  if [ ! -f /config/wg1.conf ]; then
+    echo "**** No client conf found. Provide your own client conf as \"/config/wg1.conf\" and restart the container. ****"
     sleep infinity
   fi
   echo "**** Disabling CoreDNS ****"
